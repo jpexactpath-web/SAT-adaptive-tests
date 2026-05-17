@@ -35,6 +35,83 @@
     overflow: hidden;
   }
 
+  /* ── INTRO SCREEN ────────────────────────────────────── */
+  #intro-screen {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--gray-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 400;
+    padding: 20px;
+  }
+  .intro-container {
+    background: var(--white);
+    border: 1px solid var(--gray-border);
+    border-radius: 8px;
+    padding: 40px;
+    max-width: 500px;
+    width: 100%;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    text-align: center;
+  }
+  .intro-container h1 {
+    color: var(--navy);
+    font-size: 24px;
+    margin-bottom: 16px;
+    font-weight: 700;
+  }
+  .intro-container p {
+    color: var(--text-mid);
+    font-size: 14.5px;
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+  .input-group {
+    text-align: left;
+    margin-bottom: 24px;
+  }
+  .input-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 8px;
+  }
+  .input-group input {
+    width: 100%;
+    border: 1.5px solid var(--gray-border);
+    border-radius: 5px;
+    padding: 10px 14px;
+    font-size: 15px;
+    outline: none;
+  }
+  .input-group input:focus {
+    border-color: var(--blue-select-border);
+  }
+  .start-btn {
+    background: var(--navy);
+    color: var(--white);
+    border: none;
+    padding: 12px 36px;
+    font-size: 15px;
+    font-weight: 700;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+  }
+  .start-btn:hover { background: var(--navy-light); }
+  #setup-error {
+    color: var(--incorrect);
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 12px;
+    display: none;
+    text-align: left;
+    line-height: 1.5;
+  }
+
   /* ── HEADER ───────────────────────────────────────────── */
   #header {
     position: fixed;
@@ -42,7 +119,7 @@
     height: var(--header-h);
     background: var(--navy);
     color: #fff;
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: space-between;
     padding: 0 18px;
@@ -83,7 +160,7 @@
     top: var(--header-h);
     bottom: var(--footer-h);
     left: 0; right: 0;
-    display: flex;
+    display: none;
   }
   #left-pane {
     width: 50%;
@@ -158,7 +235,7 @@
     height: var(--footer-h);
     background: #f0f2f5;
     border-top: 1px solid var(--gray-border);
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: space-between;
     padding: 0 18px;
@@ -317,23 +394,6 @@
   }
   #export-btn:hover { background: #166128; }
 
-  #name-input-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    max-width: 700px;
-    margin: 0 auto 18px;
-  }
-  #name-input-row label { font-size: 13px; font-weight: 600; color: var(--navy); white-space: nowrap; }
-  #student-name-input {
-    flex: 1;
-    border: 1.5px solid var(--gray-border);
-    border-radius: 5px;
-    padding: 7px 12px;
-    font-size: 14px;
-  }
-
-  /* Review accordion */
   .review-item {
     max-width: 700px;
     margin: 0 auto 10px;
@@ -342,7 +402,7 @@
     border-radius: 8px;
     overflow: hidden;
   }
-  .review-header {
+  .review-header-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -350,7 +410,7 @@
     cursor: pointer;
     user-select: none;
   }
-  .review-header:hover { background: var(--gray-light); }
+  .review-header-row:hover { background: var(--gray-light); }
   .review-qnum { font-weight: 700; font-size: 13px; color: var(--navy); }
   .review-badge {
     font-size: 12px;
@@ -394,9 +454,21 @@
 </head>
 <body>
 
-<!-- HEADER -->
+<div id="intro-screen">
+  <div class="intro-container">
+    <h1>Section 1: Reading and Writing</h1>
+    <p>This is an adaptive practice test containing two modules of 27 questions each. Your performance on Module 1 determines the difficulty mix of Module 2.</p>
+    <div class="input-group">
+      <label for="student-name-input">Student Name</label>
+      <input type="text" id="student-name-input" placeholder="Enter your full name..." autocomplete="off" />
+    </div>
+    <button class="start-btn" onclick="verifyAndStart()">Start Practice Test</button>
+    <div id="setup-error"></div>
+  </div>
+</div>
+
 <div id="header">
-  <div id="header-left" id="section-label">Section 1, Module 1: Reading and Writing</div>
+  <div id="header-left">Section 1, Module 1: Reading and Writing</div>
   <div id="header-center">
     <span id="timer-display">Time Left: 32:00</span>
     <button id="hide-btn" onclick="toggleTimer()">Hide</button>
@@ -404,7 +476,6 @@
   <div id="header-right"></div>
 </div>
 
-<!-- TEST SCREEN -->
 <div id="test-screen">
   <div id="left-pane">
     <div id="passage-text"></div>
@@ -415,27 +486,23 @@
   </div>
 </div>
 
-<!-- FOOTER -->
 <div id="footer">
   <button class="nav-btn" id="prev-btn" onclick="navigate(-1)">&#8592; Previous</button>
   <button id="question-indicator-btn" onclick="toggleGrid()">Question 1 of 27</button>
   <button class="nav-btn" id="next-btn" onclick="navigate(1)">Next &#8594;</button>
 </div>
 
-<!-- QUESTION GRID -->
 <div id="grid-overlay">
   <div id="grid-title">Question Navigator</div>
   <div id="grid-cells"></div>
 </div>
 
-<!-- TRANSITION SCREEN -->
 <div id="transition-screen">
   <h2>Module 1 Complete</h2>
-  <p>You have completed Section 1, Module 1. You are now moving to Module 2. The timer will reset. Click the button below when you are ready to begin.</p>
+  <p>You have completed Section 1, Module 1. You are now moving to Module 2. The timer will reset to 32 minutes. Click the button below when you are ready to begin.</p>
   <button id="start-mod2-btn" onclick="startModule2()">Begin Module 2</button>
 </div>
 
-<!-- RESULTS SCREEN -->
 <div id="results-screen">
   <div id="results-header">
     <h1>SAT Reading and Writing – Practice Test Results</h1>
@@ -445,10 +512,6 @@
       <div class="stat-box"><div class="stat-label">Incorrect</div><div class="stat-val" id="res-incorrect">–</div></div>
       <div class="stat-box"><div class="stat-label">Total Time</div><div class="stat-val" id="res-time">–</div></div>
     </div>
-  </div>
-  <div id="name-input-row">
-    <label for="student-name-input">Student Name:</label>
-    <input type="text" id="student-name-input" placeholder="Enter name for export…" />
   </div>
   <button id="export-btn" onclick="exportExcel()">Download Excel Report (.xlsx)</button>
   <div id="review-list"></div>
@@ -477,17 +540,25 @@ function sortQuestions(arr){
   });
 }
 
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 function pickQuestions(pool, usedIds, counts){
-  // counts: {CS:{Easy:n,Medium:n,Hard:n}, II:{...}, SEC:{...}}
   const result = [];
   for(const dom of DOMAIN_ORDER){
     for(const diff of DIFF_ORDER){
-      const need = counts[dom][diff];
+      let need = counts[dom][diff];
       if(!need) continue;
       const candidates = pool.filter(q=>
         q.domain===dom && q.difficulty===diff && !usedIds.has(q.id)
       );
-      const picked = candidates.slice(0, need);
+      const picked = shuffle(candidates).slice(0, need);
       picked.forEach(q=>{ usedIds.add(q.id); result.push(q); });
     }
   }
@@ -496,22 +567,55 @@ function pickQuestions(pool, usedIds, counts){
 
 // ── STATE ────────────────────────────────────────────────────────────────────
 let module1 = [], module2 = [];
-let currentModule = 1;   // 1 or 2
+let currentModule = 1; 
 let currentIndex  = 0;
-let answers = {};        // id -> chosen index (0-3)
-let timings = {};        // id -> seconds spent
+let answers = {};        
+let timings = {};        
 let questionStartTime = Date.now();
 let timerInterval = null;
 let moduleTimeLeft = 32*60;
 let timerHidden = false;
 let gridVisible = false;
 let mod1Score = 0;
+let studentName = "Student";
+
+// ── VERIFY AND START ─────────────────────────────────────────────────────────
+function verifyAndStart() {
+  const nameInput = document.getElementById('student-name-input');
+  const errDiv = document.getElementById('setup-error');
+  
+  studentName = nameInput.value.trim();
+  if(!studentName) {
+    errDiv.textContent = "⚠ Student Name is required to track scores accurately.";
+    errDiv.style.display = "block";
+    nameInput.focus();
+    return;
+  }
+
+  if (typeof BANK === 'undefined') {
+    errDiv.innerHTML = "⚠ <strong>ReferenceError: BANK is not defined</strong><br>The system cannot find your question database. Check that 'bank.js' sits in the same folder and is named correctly.";
+    errDiv.style.display = "block";
+    return;
+  }
+
+  if (!Array.isArray(BANK) || BANK.length < 54) {
+    errDiv.innerHTML = "⚠ The question bank is empty or too small. It must contain at least 54 valid questions.";
+    errDiv.style.display = "block";
+    return;
+  }
+
+  errDiv.style.display = "none";
+  document.getElementById('intro-screen').style.display = "none";
+  document.getElementById('header').style.display = "flex";
+  document.getElementById('test-screen').style.display = "flex";
+  document.getElementById('footer').style.display = "flex";
+  
+  initTest();
+}
 
 // ── INIT ─────────────────────────────────────────────────────────────────────
-function init(){
+function initTest(){
   const usedIds = new Set();
-
-  // Module 1: 9 per domain, any difficulty mix
   const m1Counts = {
     CS:  {Easy:3, Medium:3, Hard:3},
     II:  {Easy:3, Medium:3, Hard:3},
@@ -520,7 +624,6 @@ function init(){
   const m1Raw = pickQuestions(BANK, usedIds, m1Counts);
   module1 = sortQuestions(m1Raw);
 
-  // Module 2 built after Module 1 submission (deferred)
   renderQuestion();
   startTimer(32*60);
   updateHeaderLabel();
@@ -590,7 +693,13 @@ function renderQuestion(){
   const q = list[currentIndex];
 
   document.getElementById('passage-text').innerHTML = q.passage;
-  document.getElementById('question-prompt').textContent = q.question;
+  
+  const promptEl = document.getElementById('question-prompt');
+  if (q.question === null || q.question.trim() === "") {
+    promptEl.textContent = "Which choice completes the text so that it conforms to the conventions of Standard English?";
+  } else {
+    promptEl.textContent = q.question;
+  }
 
   const cc = document.getElementById('choices-container');
   cc.innerHTML='';
@@ -629,7 +738,7 @@ function selectAnswer(i){
 
 function recordTime(){
   const list = currentList();
-  if(!list.length) return;
+  if(!list || !list.length) return;
   const q = list[currentIndex];
   if(!q) return;
   const elapsed = (Date.now()-questionStartTime)/1000;
@@ -676,7 +785,6 @@ function updateGrid(){
 function showTransition(){
   recordTime();
   clearInterval(timerInterval);
-  // calc mod1 score
   mod1Score=0;
   module1.forEach(q=>{ if(answers[q.id]===q.answer) mod1Score++; });
   document.getElementById('test-screen').style.display='none';
@@ -729,8 +837,14 @@ function buildReview(allQ){
     const chosen=answers[q.id];
     const item=document.createElement('div');
     item.className='review-item';
+    
+    let displayPrompt = q.question;
+    if (q.question === null || q.question.trim() === "") {
+      displayPrompt = "Which choice completes the text so that it conforms to the conventions of Standard English?";
+    }
+
     item.innerHTML=`
-      <div class="review-header" onclick="toggleReview(this)">
+      <div class="review-header-row" onclick="toggleReview(this)">
         <span class="review-qnum">Q${i+1}. ${q.domain} – ${q.skill} (${q.difficulty})</span>
         <span style="display:flex;align-items:center;gap:8px;">
           <span class="review-badge ${isCorrect?'badge-correct':'badge-incorrect'}">${isCorrect?'Correct':'Incorrect'}</span>
@@ -739,7 +853,7 @@ function buildReview(allQ){
       </div>
       <div class="review-body">
         <div class="review-passage">${q.passage}</div>
-        <div class="review-question">${q.question}</div>
+        <div class="review-question">${displayPrompt}</div>
         <div class="review-ans-row">
           <span class="ans-label">Your Answer: </span>
           <span class="${isCorrect?'ans-correct-text':'ans-incorrect-text'}">
@@ -762,7 +876,6 @@ function toggleReview(header){
 
 // ── EXCEL EXPORT ──────────────────────────────────────────────────────────────
 function exportExcel(){
-  const name=document.getElementById('student-name-input').value||'Student';
   const allQ=[...module1,...module2];
   let correct=0, totalTime=0;
   const rows=[['Student Name','Question #','Question ID','Difficulty','Your Answer','Correct Answer','Result','Time (s)','Time (m:ss)']];
@@ -775,21 +888,18 @@ function exportExcel(){
     totalTime+=t;
     const chosenStr=chosen!==undefined?LETTERS[chosen]+'. '+q.choices[chosen]:'';
     const correctStr=LETTERS[q.answer]+'. '+q.choices[q.answer];
-    rows.push([name, i+1, q.id, q.difficulty, chosenStr, correctStr, isCorrect?'Correct':'Incorrect', t, fmt(t)]);
+    rows.push([studentName, i+1, q.id, q.difficulty, chosenStr, correctStr, isCorrect?'Correct':'Incorrect', t, fmt(t)]);
   });
 
-  rows.push([]); // Row 56 empty
+  rows.push([]); 
   const pct=Math.round(correct/54*100);
   rows.push(['SUMMARY','','','','Score: '+correct+'/54 ('+pct+'%)','','','Total: '+Math.round(totalTime)+'s',fmt(Math.round(totalTime))]);
 
   const ws=XLSX.utils.aoa_to_sheet(rows);
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'Results');
-  XLSX.writeFile(wb,'SAT_Practice_Results.xlsx');
+  XLSX.writeFile(wb,`SAT_Results_${studentName.replace(/\s+/g,'_')}.xlsx`);
 }
-
-// ── START ─────────────────────────────────────────────────────────────────────
-init();
 </script>
 </body>
 </html>
