@@ -5,14 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>SAT Practice Test – Reading and Writing</title>
 <script>
-  // Global tracker to catch syntax errors inside bank.js
-  window.bankFileHasSyntaxError = false;
-  window.bankFileErrorMessage = "";
   window.addEventListener('error', function(e) {
-    if (e.filename && e.filename.indexOf('bank.js') !== -1) {
-      window.bankFileHasSyntaxError = true;
-      window.bankFileErrorMessage = e.message + " (Line " + e.lineno + ")";
-    }
+    setTimeout(function() {
+      const errDiv = document.getElementById('setup-error');
+      if (errDiv) {
+        errDiv.innerHTML = "<strong>⚠ Critical JavaScript Error Detected:</strong><br>" + 
+                            e.message + "<br><em>File: " + (e.filename || "inline script") + " | Line: " + e.lineno + "</em>";
+        errDiv.style.display = "block";
+      }
+    }, 100);
   }, true);
 </script>
 <script src="bank.js"></script>
@@ -46,7 +47,6 @@
     overflow: hidden;
   }
 
-  /* ── INTRO SCREEN ────────────────────────────────────── */
   #intro-screen {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
@@ -127,7 +127,6 @@
     border-radius: 4px;
   }
 
-  /* ── HEADER ───────────────────────────────────────────── */
   #header {
     position: fixed;
     top: 0; left: 0; right: 0;
@@ -169,7 +168,6 @@
   #hide-btn:hover { background: rgba(255,255,255,0.25); }
   #header-right { flex: 1; display: flex; justify-content: flex-end; }
 
-  /* ── MAIN SPLIT PANES ─────────────────────────────────── */
   #test-screen {
     position: fixed;
     top: var(--header-h);
@@ -203,7 +201,6 @@
     line-height: 1.5;
   }
 
-  /* ── CHOICE ITEMS ─────────────────────────────────────── */
   .choice-item {
     display: flex;
     align-items: flex-start;
@@ -243,7 +240,6 @@
   }
   .choice-text { font-size: 14.5px; line-height: 1.55; padding-top: 3px; }
 
-  /* ── FOOTER NAV ───────────────────────────────────────── */
   #footer {
     position: fixed;
     bottom: 0; left: 0; right: 0;
@@ -283,7 +279,6 @@
   }
   #question-indicator-btn:hover { background: var(--navy); color: #fff; }
 
-  /* ── QUESTION GRID OVERLAY ────────────────────────────── */
   #grid-overlay {
     display: none;
     position: fixed;
@@ -329,7 +324,6 @@
   .grid-cell.answered { background: var(--navy); color: #fff; border-color: var(--navy); }
   .grid-cell.current { border-color: var(--blue-select-border); box-shadow: 0 0 0 2px var(--blue-select-border); }
 
-  /* ── TRANSITION SCREEN ────────────────────────────────── */
   #transition-screen {
     display: none;
     position: fixed;
@@ -358,7 +352,6 @@
   }
   #start-mod2-btn:hover { background: var(--navy-light); }
 
-  /* ── RESULTS SCREEN ───────────────────────────────────── */
   #results-screen {
     display: none;
     position: fixed;
@@ -368,7 +361,6 @@
     z-index: 300;
     padding: 40px 24px 60px;
   }
-  #results-screen.visible { block; }
 
   #results-header {
     background: var(--navy);
@@ -533,10 +525,19 @@
 </div>
 
 <script>
-// ── UTILITY ──────────────────────────────────────────────────────────────────
 const LETTERS = ['A','B','C','D'];
 const DOMAIN_ORDER = ['CS','II','SEC'];
 const DIFF_ORDER   = ['Easy','Medium','Hard'];
+
+function cleanText(text) {
+  if (!text) return "";
+  text = text.replace(/(\w+)\s+s(\s+|\b)/g, "$1's$2");
+  text = text.replace(/^[\s’\'’—–-]+/, "");
+  text = text.replace(/\s+’\s+/g, " ");
+  text = text.replace(/\s+’\s*—\s*/g, " — ");
+  text = text.replace(/“\s*”/g, "");
+  return text;
+}
 
 function fmt(s){
   s = Math.round(s);
@@ -580,7 +581,6 @@ function pickQuestions(pool, usedIds, counts){
   return result;
 }
 
-// ── STATE ────────────────────────────────────────────────────────────────────
 let module1 = [], module2 = [];
 let currentModule = 1; 
 let currentIndex  = 0;
@@ -594,7 +594,6 @@ let gridVisible = false;
 let mod1Score = 0;
 let studentName = "Student";
 
-// ── VERIFY AND START ─────────────────────────────────────────────────────────
 function verifyAndStart() {
   const nameInput = document.getElementById('student-name-input');
   const errDiv = document.getElementById('setup-error');
@@ -607,27 +606,8 @@ function verifyAndStart() {
     return;
   }
 
-  // Automated Server Diagnosis Routing
-  if (window.bankFileHasSyntaxError) {
-    errDiv.innerHTML = "<strong>⚠ Syntax Error Found Inside bank.js:</strong><br>" + 
-                        window.bankFileErrorMessage + "<br><br>" +
-                        "This means your data conversion process left a broken character, a missing comma, or an unclosed bracket in your question list. Re-run your cleanup script to get a clean file.";
-    errDiv.style.display = "block";
-    return;
-  }
-
   if (typeof BANK === 'undefined') {
-    errDiv.innerHTML = "<strong>⚠ ReferenceError: BANK is not defined</strong><br>" +
-                        "The system cannot locate your database. This happens due to one of these server reasons:<br>" +
-                        "1. Your file on GitHub is named with capital letters (like Bank.js or bank.JS). Rename it to strictly lowercase <strong>bank.js</strong>.<br>" +
-                        "2. You have a double extension like bank.js.txt.<br>" +
-                        "3. Your browser is stuck loading an old version. Hold down Shift and press the reload button to clear the cache.";
-    errDiv.style.display = "block";
-    return;
-  }
-
-  if (!Array.isArray(BANK) || BANK.length < 54) {
-    errDiv.innerHTML = "⚠ The question bank is empty or too small. It must contain at least 54 valid questions.";
+    errDiv.innerHTML = "<strong>⚠ ReferenceError: BANK is not defined</strong><br>Check that bank.js matches exactly.";
     errDiv.style.display = "block";
     return;
   }
@@ -641,7 +621,6 @@ function verifyAndStart() {
   initTest();
 }
 
-// ── INIT ─────────────────────────────────────────────────────────────────────
 function initTest(){
   const usedIds = new Set();
   const m1Counts = {
@@ -677,7 +656,6 @@ function buildModule2(hard){
   module2 = sortQuestions(m2Raw);
 }
 
-// ── TIMER ────────────────────────────────────────────────────────────────────
 function startTimer(seconds){
   clearInterval(timerInterval);
   moduleTimeLeft = seconds;
@@ -705,13 +683,11 @@ function toggleTimer(){
   updateTimerDisplay();
 }
 
-// ── HEADER ───────────────────────────────────────────────────────────────────
 function updateHeaderLabel(){
   document.getElementById('header-left').textContent =
     `Section 1, Module ${currentModule}: Reading and Writing`;
 }
 
-// ── RENDER ───────────────────────────────────────────────────────────────────
 function currentList(){ return currentModule===1 ? module1 : module2; }
 
 function renderQuestion(){
@@ -720,13 +696,13 @@ function renderQuestion(){
   const list = currentList();
   const q = list[currentIndex];
 
-  document.getElementById('passage-text').innerHTML = q.passage;
+  document.getElementById('passage-text').innerHTML = cleanText(q.passage);
   
   const promptEl = document.getElementById('question-prompt');
-  if (q.question === null || q.question.trim() === "") {
+  if (q.question === null || q.question === undefined || q.question.trim() === "") {
     promptEl.textContent = "Which choice completes the text so that it conforms to the conventions of Standard English?";
   } else {
-    promptEl.textContent = q.question;
+    promptEl.textContent = cleanText(q.question);
   }
 
   const cc = document.getElementById('choices-container');
@@ -734,7 +710,7 @@ function renderQuestion(){
   q.choices.forEach((txt,i)=>{
     const div = document.createElement('div');
     div.className='choice-item'+(answers[q.id]===i?' selected':'');
-    div.innerHTML=`<div class="choice-letter">${LETTERS[i]}</div><div class="choice-text">${txt}</div>`;
+    div.innerHTML=`<div class="choice-letter">${LETTERS[i]}</div><div class="choice-text">${cleanText(txt)}</div>`;
     div.onclick=()=>selectAnswer(i);
     cc.appendChild(div);
   });
@@ -747,11 +723,11 @@ function renderQuestion(){
   const isLast = currentIndex===total-1;
   const nextBtn = document.getElementById('next-btn');
   if(isLast && currentModule===2){
-    nextBtn.textContent='Submit ✓';
+    nextBtn.innerHTML='Submit ✓';
   } else if(isLast && currentModule===1){
-    nextBtn.textContent='Submit Module 1';
+    nextBtn.innerHTML='Submit Module 1';
   } else {
-    nextBtn.textContent='Next →';
+    nextBtn.innerHTML='Next &#8594;';
   }
 
   closeGrid();
@@ -760,7 +736,11 @@ function renderQuestion(){
 
 function selectAnswer(i){
   const q = currentList()[currentIndex];
-  answers[q.id]=i;
+  if (answers[q.id] === i) {
+    delete answers[q.id];
+  } else {
+    answers[q.id]=i;
+  }
   renderQuestion();
 }
 
@@ -788,7 +768,6 @@ function navigate(dir){
   renderQuestion();
 }
 
-// ── GRID ─────────────────────────────────────────────────────────────────────
 function toggleGrid(){
   gridVisible=!gridVisible;
   document.getElementById('grid-overlay').classList.toggle('visible',gridVisible);
@@ -809,7 +788,6 @@ function updateGrid(){
   });
 }
 
-// ── TRANSITION ───────────────────────────────────────────────────────────────
 function showTransition(){
   recordTime();
   clearInterval(timerInterval);
@@ -832,7 +810,6 @@ function startModule2(){
   renderQuestion();
 }
 
-// ── RESULTS ──────────────────────────────────────────────────────────────────
 function showResults(){
   recordTime();
   clearInterval(timerInterval);
@@ -854,7 +831,7 @@ function showResults(){
   document.getElementById('res-time').textContent=fmt(Math.round(totalTime));
 
   buildReview(allQ);
-  document.getElementById('results-screen').classList.add('visible');
+  document.getElementById('results-screen').style.display = 'block';
 }
 
 function buildReview(allQ){
@@ -867,7 +844,7 @@ function buildReview(allQ){
     item.className='review-item';
     
     let displayPrompt = q.question;
-    if (q.question === null || q.question.trim() === "") {
+    if (q.question === null || q.question === undefined || q.question.trim() === "") {
       displayPrompt = "Which choice completes the text so that it conforms to the conventions of Standard English?";
     }
 
@@ -880,16 +857,16 @@ function buildReview(allQ){
         </span>
       </div>
       <div class="review-body">
-        <div class="review-passage">${q.passage}</div>
-        <div class="review-question">${displayPrompt}</div>
+        <div class="review-passage">${cleanText(q.passage)}</div>
+        <div class="review-question">${cleanText(displayPrompt)}</div>
         <div class="review-ans-row">
           <span class="ans-label">Your Answer: </span>
           <span class="${isCorrect?'ans-correct-text':'ans-incorrect-text'}">
-            ${chosen!==undefined?LETTERS[chosen]+'. '+q.choices[chosen]:'(No answer)'}
+            ${chosen!==undefined?LETTERS[chosen]+'. '+cleanText(q.choices[chosen]):'Not answered'}
           </span>
         </div>
-        ${!isCorrect?`<div class="review-ans-row"><span class="ans-label">Correct Answer: </span><span class="ans-correct-text">${LETTERS[q.answer]}. ${q.choices[q.answer]}</span></div>`:''}
-        <div class="review-rationale"><strong>Rationale:</strong> ${q.rationale}</div>
+        ${!isCorrect?`<div class="review-ans-row"><span class="ans-label">Correct Answer: </span><span class="ans-correct-text">${LETTERS[q.answer]}. ${cleanText(q.choices[q.answer])}</span></div>`:''}
+        <div class="review-rationale"><strong>Rationale:</strong> ${cleanText(q.rationale)}</div>
         <div style="margin-top:8px;font-size:12px;color:#777;">Time spent: ${fmt(Math.round(timings[q.id]||0))}</div>
       </div>`;
     rl.appendChild(item);
@@ -902,8 +879,8 @@ function toggleReview(header){
   header.querySelector('.review-chevron').textContent=open?'▲':'▼';
 }
 
-// ── EXCEL EXPORT ──────────────────────────────────────────────────────────────
 function exportExcel(){
+  const destructionName = studentName.replace(/\s+/g,'_');
   const allQ=[...module1,...module2];
   let correct=0, totalTime=0;
   const rows=[['Student Name','Question #','Question ID','Difficulty','Your Answer','Correct Answer','Result','Time (s)','Time (m:ss)']];
@@ -914,8 +891,8 @@ function exportExcel(){
     if(isCorrect) correct++;
     const t=Math.round(timings[q.id]||0);
     totalTime+=t;
-    const chosenStr=chosen!==undefined?LETTERS[chosen]+'. '+q.choices[chosen]:'';
-    const correctStr=LETTERS[q.answer]+'. '+q.choices[q.answer];
+    const chosenStr=chosen!==undefined?LETTERS[chosen]+'. '+cleanText(q.choices[chosen]):'Not answered';
+    const correctStr=LETTERS[q.answer]+'. '+cleanText(q.choices[q.answer]);
     rows.push([studentName, i+1, q.id, q.difficulty, chosenStr, correctStr, isCorrect?'Correct':'Incorrect', t, fmt(t)]);
   });
 
@@ -926,7 +903,7 @@ function exportExcel(){
   const ws=XLSX.utils.aoa_to_sheet(rows);
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'Results');
-  XLSX.writeFile(wb,`SAT_Results_${studentName.replace(/\s+/g,'_')}.xlsx`);
+  XLSX.writeFile(wb,`SAT_Results_${destructionName}.xlsx`);
 }
 </script>
 </body>
